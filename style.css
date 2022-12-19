@@ -48,6 +48,16 @@ body {
     flex-flow: row-reverse;
 }
 
+.row > div > img {
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    visibility: hidden;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 
 #table-container .row:nth-child(odd) > div:nth-child(odd) {
     background: #9ee29e;
@@ -57,7 +67,7 @@ body {
     background: #9ee29e;
 }
 
-#table-container :first-child .pop-up-container > :first-child {
+#table-container > :first-child .pop-up-container > :first-child {
     transform: translateY(200%);
 }
 
@@ -69,6 +79,7 @@ body {
     height: 200%;
     visibility: hidden;
     z-index: 10;
+    cursor: context-menu;
 }
 
 .pop-up-container > div {
@@ -98,4 +109,12 @@ body {
     aspect-ratio: 1/1;
 }
 
+.reveal .content {
+    visibility: visible;
+}
+
+.content img {
+    width: 60%;
+    height: 60%;
+}
 

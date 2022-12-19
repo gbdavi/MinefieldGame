@@ -4,7 +4,9 @@ class Tile {
     elem;
     valueElem;
     popupElem;
+    flagElem;
     value;
+    revealed = false;
     flagAssigned = false;
     x;
     y;
@@ -15,10 +17,9 @@ class Tile {
         this.value = value;
         this.genModel();
         this.elem.onclick = () => {
-            this.elem.style = `cursor: context-menu`;
             // this.valueElem.style.visibility = "visible";
             Table.removeAllSelected();
-            console.log("mudado visibilidade")
+            if (!this.revealed)
             this.popupElem.style.visibility = "visible";
             if (value == -2)
                 console.log("Boom!")
@@ -27,11 +28,6 @@ class Tile {
 
     genModel() {
         let elem = document.createElement("div");
-        // elem.innerHTML = this.value;
-        // elem.innerHTML = `
-        //     <div class="value">${this.value}</div>
-        //     <div class="pop-up-menu"></div>
-        // `;
 
         let valueContainer = document.createElement("div");
         valueContainer.innerText = this.value;
@@ -39,6 +35,11 @@ class Tile {
 
         let color;
         switch(this.value) {
+            case -2:
+                console.log(this.value == -2)
+                valueContainer.innerHTML = `<img src="./icons/explosion.png">`;
+                color = "transparent";
+                break;
             case 1: color = "#961189"; break;
             case 2: color = "#119620"; break;
             case 3: color = "#42cbf5"; break;
@@ -46,44 +47,86 @@ class Tile {
             case 5: color = "#ffcc00"; break;
             case 6: color = "#f58442"; break;
             case 7: color = "#f54242"; break;
-            case 8: color = "black"; break;
+            case 8: color = "#000000"; break;
             default: color = "transparent";
         }
         valueContainer.style.color = color;
         elem.appendChild( valueContainer );
+
+        this.flagElem = document.createElement("img");
+        this.flagElem.src = "./icons/flag.png";
+        elem.appendChild(this.flagElem);
+        
         
         let popupContainer = document.createElement("div");
         popupContainer.classList.add("pop-up-container");
 
-        const e = document.createElement('div');
-        const eee = document.createElement('div');
-        e.classList.add('close-container');
-        e.innerHTML += '<img src="./icons/close.png">';
-        e.addEventListener('click', (e) => {
-            // Impede do click do elemento pai ser executado
-            e.stopImmediatePropagation();
+        const container1 = document.createElement("div");
 
-            Table.removeAllSelected();
-        });
+            const showelContainer = document.createElement("div");
+            showelContainer.classList.add("showel-container");
+            showelContainer.innerHTML += '<img src="./icons/showel.png">';
+            showelContainer.addEventListener("click", (e) => {
+                // Impede o click do elemento pai ser executado
+                e.stopImmediatePropagation();
+                this.reveal();
+                this.revealed = true;
+                Table.removeAllSelected();
+            });
 
-        const ee = document.createElement('div');
-        ee.appendChild(e);
-        ee.appendChild(eee);
+            const flagContainer = document.createElement("div");
+            flagContainer.classList.add("flag-container");
+            flagContainer.innerHTML += '<img src="./icons/flag.png">';
+            flagContainer.addEventListener("click", (e) => {
+                // Impede o click do elemento pai ser executado
+                e.stopImmediatePropagation();
+                this.switchFlag();
+                Table.removeAllSelected();
+            });
+        
+        container1.appendChild( showelContainer );
+        container1.appendChild( flagContainer );
 
-        popupContainer.innerHTML = `
-            <div>
-                <div class="showel-container"><img src="./icons/showel.png"></div>
-                <div class="flag-container"><img src="./icons/flag.png"></div>
-            </div>
-        `;
+        const container2 = document.createElement('div');
 
-        popupContainer.appendChild(ee);
+            const closeContainer = document.createElement("div");
+            closeContainer.classList.add("close-container");
+            closeContainer.innerHTML += '<img src="./icons/close.png">';
+            closeContainer.addEventListener("click", (e) => {
+                // Impede o click do elemento pai ser executado
+                e.stopImmediatePropagation();
+                Table.removeAllSelected();
+            });
+
+        container2.appendChild( closeContainer );
+        container2.appendChild( document.createElement("div") );
+        
+        
+        popupContainer.appendChild(container1);
+        popupContainer.appendChild(container2);
 
         elem.appendChild( popupContainer );
         
         this.elem = elem;
         this.valueElem = valueContainer;
         this.popupElem = popupContainer;
+    }
+
+    reveal() {
+        this.elem.classList.add("reveal");
+        if (this.value == -2) {
+            Table.revealBombs();
+        }
+    }
+
+    switchFlag() {
+        if (!this.flagAssigned) {
+            this.flagAssigned = true;
+            this.flagElem.style.visibility = "visible";
+        } else {
+            this.flagAssigned = false;
+            this.flagElem.style.visibility = "hidden";
+        }
     }
 }
 
@@ -93,14 +136,23 @@ const Table =  {
     gridSizeX: 18,
     gridSizeY: 11,
     table: document.querySelector("#table-container"),
+    bombs:[],
 
     start() {
         this.table.innerHTML = "";
+        let tiles = Table.genBombs();
         Table.genTable(
             Table.addIndicators(
-                Table.genBombs()
+                tiles
             )
         );
+        for (let i = 0; i < tiles.length; i++) {
+            for (let j = 0; j < tiles[i].length; j++) {
+                if (tiles[j][i] == -2) {
+                    Table.bombs.push( Table.table.querySelectorAll(".row")[j].querySelectorAll("div")[i] );
+                }
+            }
+        }
     },
 
     genTable(table) {
@@ -148,6 +200,14 @@ const Table =  {
         return table;
     },
 
+    revealBombs(x, y) {
+        for (let i = 0; i < Table.bombs.length; i++) {
+            setTimeout( () => {
+                // Table.bombs[i].style.visibility = "visible" 
+            }, i*500 );
+        }
+    },
+
     addIndicators(table) {
         for (let i = 0; i < Table.gridSizeX; i++) {
             for (let j = 0; j < Table.gridSizeY; j++) {
@@ -182,8 +242,6 @@ const Table =  {
     },
 
     removeAllSelected(e) {
-        console.log(e)
-        console.log("remove select")
         let popups = document.querySelectorAll(".pop-up-container");
         for (let i = 0; i < popups.length; i++) {
             popups[i].style.visibility = "";
