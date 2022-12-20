@@ -7,8 +7,6 @@ body {
 
 #table-container {
     display: grid;
-    /* width: 1440px; */
-    /* height: 880px; */
     height: 80%;
     aspect-ratio: 18/11;
     position: absolute;
@@ -111,6 +109,7 @@ body {
 
 .reveal .content {
     visibility: visible;
+    background: #d4d2cf;
 }
 
 .content img {

@@ -21,8 +21,6 @@ class Tile {
             Table.removeAllSelected();
             if (!this.revealed)
             this.popupElem.style.visibility = "visible";
-            if (value == -2)
-                console.log("Boom!")
         }
     }
 
@@ -55,6 +53,7 @@ class Tile {
 
         this.flagElem = document.createElement("img");
         this.flagElem.src = "./icons/flag.png";
+        this.flagElem.classList.add("flag");
         elem.appendChild(this.flagElem);
         
         
@@ -146,10 +145,11 @@ const Table =  {
                 tiles
             )
         );
-        for (let i = 0; i < tiles.length; i++) {
-            for (let j = 0; j < tiles[i].length; j++) {
-                if (tiles[j][i] == -2) {
-                    Table.bombs.push( Table.table.querySelectorAll(".row")[j].querySelectorAll("div")[i] );
+        console.log(tiles)
+        for (let col = 0; col < tiles.length; col++) {
+            for (let row = 0; row < tiles[col].length; row++) {
+                if (tiles[col][row] == -2) {
+                    Table.bombs.push( Table.table.querySelectorAll(".row > div")[(col + row*Table.gridSizeX)] )
                 }
             }
         }
@@ -203,39 +203,54 @@ const Table =  {
     revealBombs(x, y) {
         for (let i = 0; i < Table.bombs.length; i++) {
             setTimeout( () => {
-                // Table.bombs[i].style.visibility = "visible" 
+                Table.bombs[i].querySelector(".content").style.visibility = "visible";
+                Table.bombs[i].querySelector(".flag").style.visibility = "";
             }, i*500 );
         }
     },
 
     addIndicators(table) {
-        for (let i = 0; i < Table.gridSizeX; i++) {
-            for (let j = 0; j < Table.gridSizeY; j++) {
-                if (table[i][j] != -2) {
-                    let roundBombs = 0;
-                    if (i-1 >= 0) {
-                        if (table[i-1][j] == -2) roundBombs++;
-                        if (j-1 >= 0)
-                            if (table[i-1][j-1] == -2) roundBombs++;
-                        if (j+1 < Table.gridSizeX)
-                            if (table[i-1][j+1] == -2) roundBombs++;
-                    }
+        for (let col = 0; col < Table.gridSizeX; col++) {
+            for (let row = 0; row < Table.gridSizeY; row++) {
 
-                    if (i+1 < Table.gridSizeY) {
-                        if (table[i+1][j] == -2) roundBombs++;
-                        if (j-1 >= 0)
-                            if (table[i+1][j-1] == -2) roundBombs++;
-                        if (j+1 < Table.gridSizeX)
-                            if (table[i+1][j+1] == -2) roundBombs++;
+                if (table[col][row] == -2) continue;
+
+                let roundBombs = 0;
+                if (col-1 >= 0) {
+                    roundBombs += table[col-1][row] == -2 ? 1 : 0;
+
+                    if (row-1 >= 0) {
+                        roundBombs += table[col-1][row-1] == -2 ? 1 : 0;
                     }
                     
-                    if (j-1 >= 0)
-                            if (table[i][j-1] == -2) roundBombs++;
-                    if (j+1 < Table.gridSizeX)
-                        if (table[i][j+1] == -2) roundBombs++;
-
-                    table[i][j] = roundBombs
+                    if (row+1 < Table.gridSizeY) {
+                        roundBombs += table[col-1][row+1] == -2 ? 1 : 0;
+                    }
+                    
                 }
+                
+                if (col+1 < Table.gridSizeX) {
+                    roundBombs += table[col+1][row] == -2 ? 1 : 0;
+
+                    if (row-1 >= 0) {
+                        roundBombs += table[col+1][row-1] == -2 ? 1 : 0;
+                    }
+                    
+                    if (row+1 < Table.gridSizeY) {
+                        roundBombs += table[col+1][row+1] == -2 ? 1 : 0;
+                    }
+
+                }
+                
+                if (row-1 >= 0) {
+                    roundBombs += table[col][row-1] == -2 ? 1 : 0;
+                }
+                
+                if (row+1 < Table.gridSizeY) {
+                    roundBombs += table[col][row+1] == -2 ? 1 : 0;
+                }
+
+                table[col][row] = roundBombs
             }
         }
         return table;
