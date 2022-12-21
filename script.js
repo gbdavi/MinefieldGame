@@ -34,7 +34,6 @@ class Tile {
         let color;
         switch(this.value) {
             case -2:
-                console.log(this.value == -2)
                 valueContainer.innerHTML = `<img src="./icons/explosion.png">`;
                 color = "transparent";
                 break;
@@ -112,9 +111,21 @@ class Tile {
     }
 
     reveal() {
-        this.elem.classList.add("reveal");
-        if (this.value == -2) {
-            Table.revealBombs();
+        if (!this.revealed) {
+            this.revealed = true;
+
+            this.elem.classList.add("reveal");
+            this.elem.querySelector(".content").style.visibility = "visible";
+            this.elem.querySelector(".flag").style.visibility = "";
+
+            if (this.value == 0) {
+                console.log(this.value)
+                Table.revealRound(this.x, this.y);
+            }
+            if (this.value == -2) {
+                
+                Table.revealBombs();
+            }
         }
     }
 
@@ -135,6 +146,7 @@ const Table =  {
     gridSizeX: 18,
     gridSizeY: 11,
     table: document.querySelector("#table-container"),
+    grid:[],
     bombs:[],
 
     start() {
@@ -145,11 +157,11 @@ const Table =  {
                 tiles
             )
         );
-        console.log(tiles)
         for (let col = 0; col < tiles.length; col++) {
             for (let row = 0; row < tiles[col].length; row++) {
-                if (tiles[col][row] == -2) {
-                    Table.bombs.push( Table.table.querySelectorAll(".row > div")[(col + row*Table.gridSizeX)] )
+                if (Table.grid[row][col].value == -2) {
+                    Table.bombs.push( Table.grid[row][col] )
+                    // Table.bombs.push( Table.table.querySelectorAll(".row > div")[(col + row*Table.gridSizeX)] )
                 }
             }
         }
@@ -157,12 +169,15 @@ const Table =  {
 
     genTable(table) {
         for (let i = 0; i < Table.gridSizeY; i++) {
+            let gridRow = [];
             let row = document.createElement("div");
             row.classList.add("row");
             for (let j = 0; j < Table.gridSizeX; j++) {
-                row.appendChild( new Tile(j, i, table[j][i]).elem );
+                gridRow.push( new Tile(j, i, table[j][i]) );
+                row.appendChild( gridRow[j].elem );
             }
             this.table.appendChild( row );
+            Table.grid.push( gridRow );
         }
     },
 
@@ -203,8 +218,9 @@ const Table =  {
     revealBombs(x, y) {
         for (let i = 0; i < Table.bombs.length; i++) {
             setTimeout( () => {
-                Table.bombs[i].querySelector(".content").style.visibility = "visible";
-                Table.bombs[i].querySelector(".flag").style.visibility = "";
+                // Table.bombs[i].querySelector(".content").style.visibility = "visible";
+                // Table.bombs[i].querySelector(".flag").style.visibility = "";
+                Table.bombs[i].reveal();
             }, i*500 );
         }
     },
@@ -256,6 +272,43 @@ const Table =  {
         return table;
     },
 
+    revealRound(col, row) {
+        
+        if (col-1 >= 0) {
+            Table.grid[row][col-1] != undefined ? Table.grid[row][col-1].reveal() : "";
+
+            if (row-1 >= 0) {
+                Table.grid[row-1][col-1] != undefined ? Table.grid[row-1][col-1].reveal() : "";
+            }
+            
+            if (row+1 < Table.gridSizeY) {
+                Table.grid[row+1][col-1] != undefined ? Table.grid[row+1][col-1].reveal() : "";
+            }
+            
+        }
+        
+        if (col+1 < Table.gridSizeX) {
+            Table.grid[row][col+1] != undefined ? Table.grid[row][col+1].reveal() : "";
+
+            if (row-1 >= 0) {
+                Table.grid[row-1][col+1] != undefined ? Table.grid[row-1][col+1].reveal() : "";
+            }
+            
+            if (row+1 < Table.gridSizeY) {
+                Table.grid[row+1][col+1] != undefined ? Table.grid[row+1][col+1].reveal() : "";
+            }
+
+        }
+        
+        if (row-1 >= 0) {
+            Table.grid[row-1][col] != undefined ? Table.grid[row-1][col].reveal() : "";
+        }
+        
+        if (row+1 < Table.gridSizeY) {
+            Table.grid[row+1][col] != undefined ? Table.grid[row+1][col].reveal() : "";
+        }
+    },
+
     removeAllSelected(e) {
         let popups = document.querySelectorAll(".pop-up-container");
         for (let i = 0; i < popups.length; i++) {
@@ -267,5 +320,6 @@ const Table =  {
 
 Table.start();
 
-
+// Refatorar código para utilizar o objeto (Tile) ao invés do HTML
+// Criar os métodos no próprio Tile
 

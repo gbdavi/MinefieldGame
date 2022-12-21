@@ -3,6 +3,7 @@ body {
     font-family: sans-serif;
     background: #4433dd;
     overflow: hidden;
+    user-select: none;
 }
 
 #table-container {
@@ -110,6 +111,7 @@ body {
 .reveal .content {
     visibility: visible;
     background: #d4d2cf;
+    cursor: context-menu;
 }
 
 .content img {
