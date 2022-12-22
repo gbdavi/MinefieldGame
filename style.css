@@ -4,11 +4,24 @@ body {
     background: #4433dd;
     overflow: hidden;
     user-select: none;
+    margin: 0;
+}
+
+main {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 70px);
+}
+
+header {
+    width: 100vw;
+    height: 70px;
+    background: #201391;
 }
 
 #table-container {
     display: grid;
-    height: 80%;
+    height: 90%;
     aspect-ratio: 18/11;
     position: absolute;
     top: 50%;

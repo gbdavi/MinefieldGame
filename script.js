@@ -166,6 +166,7 @@ const Table =  {
     gridSizeX: 18,
     gridSizeY: 11,
     elem: document.querySelector("#table-container"),
+    nFlagsElem: document.querySelector("#flag-value"),
     grid:[],
     bombs:[],
 
