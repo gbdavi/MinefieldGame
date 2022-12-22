@@ -19,6 +19,7 @@ class Tile {
             if (this.value == undefined) {
                 Table.setBombs(this.x, this.y);
                 Table.setIndicators();
+                Table.clockStart();
                 this.reveal();
             } else {
                 Table.hidePopUps();
@@ -122,9 +123,18 @@ class Tile {
         if (!this.revealed) {
             this.revealed = true;
 
-            this.elem.classList.add("reveal");
-            this.elem.querySelector(".content").style.visibility = "visible";
-            this.elem.querySelector(".flag").style.visibility = "";
+            if (this.value != -2) {
+                if (this.flagAssigned) {
+                    console.log("wrong flag")
+                    this.flagElem.src = "./icons/wrong-flag.png";
+                }
+                this.elem.classList.add("reveal");
+            } else if (!this.flagAssigned) {
+                console.log(this.flagAssigned)
+                this.elem.classList.add("reveal");
+            }
+            // this.elem.querySelector(".content").style.visibility = "visible";
+            // this.elem.querySelector(".flag").style.visibility = "";
 
             if (this.value == 0) {
                 Table.revealRound(this.x, this.y);
@@ -145,6 +155,8 @@ class Tile {
             this.flagElem.style.visibility = "hidden";
             Table.nFlags++;
         }
+        Table.nFlagsElem.innerHTML = Table.nFlags;
+        console.log(Table.nBombs)
     }
 
     showPopUp() {
@@ -162,13 +174,28 @@ class Tile {
 
 const Table =  {
     nBombs: 35,
-    nFlags: this.nBombs,
+    nFlags: 35,
+    score: 0,
+    clockId: undefined,
     gridSizeX: 18,
     gridSizeY: 11,
     elem: document.querySelector("#table-container"),
     nFlagsElem: document.querySelector("#flag-value"),
+    scoreElem: document.querySelector("#score-value"),
     grid:[],
     bombs:[],
+    flags: [],
+
+    clockStart() {
+        Table.clockId = setInterval( () => {
+            Table.score++;
+            Table.scoreElem.innerHTML = Table.score;
+        }, 1000 );
+    },
+
+    clockStop() {
+        clearInterval( Table.clockId );
+    },
 
     genTable() {
         Table.grid = [];
@@ -184,6 +211,7 @@ const Table =  {
     createTable() {
         Table.genTable();
         Table.elem.innerHTML = "";
+        Table.scoreElem.innerHTML = 0;
         for (let rowPos = 0; rowPos < Table.gridSizeY; rowPos++) {
             let row = document.createElement("div");
             row.classList.add("row");
@@ -220,12 +248,14 @@ const Table =  {
     },
 
     revealBombs(bomb) {
-        console.log("bombs revealed!")
+        Table.clockStop();
+        Table.score = 0;
+        Table.scoreElem.innerHTML = "--";
         for (let i = 0, j = 0; i < Table.bombs.length; i++) {
             if (Table.bombs[i] != bomb) {
                 setTimeout( () => {
                     Table.bombs[i].reveal();
-                }, j*500 );
+                }, j*200 );
                 j++;
             }
         }
