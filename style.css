@@ -82,7 +82,10 @@ header > section span {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 36px;
+    /* font-size: min(1.5rem, 36px); */
+    /* font-size: 1.5rem; */
+    font-size: 1.5em;
+    /* font-size: 36px; */
     font-weight: 700;
     visibility: hidden;
     user-select: none;
@@ -175,6 +178,9 @@ header > section span {
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, .2);
+    opacity: 0;
+    visibility: hidden;
+    transition: linear .5s;
 }
 
 #modal {
@@ -231,7 +237,7 @@ header > section span {
     0% {opacity: 1}
     /* 10% {opacity: .95;}
     50% {opacity: .9;} */
-    80% {opacity: .9;}
+    70% {opacity: .9;}
     100% {opacity: 1}
 }
 

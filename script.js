@@ -18,13 +18,13 @@ class Tile {
         this.y = y;
         this.genModel();
         this.elem.onclick = () => {
+            Table.hidePopUps();
             if (this.value == undefined) {
                 Table.setBombs(this.x, this.y);
                 Table.setIndicators();
                 Table.clockStart();
                 this.reveal();
             } else {
-                Table.hidePopUps();
                 if (!this.revealed || (Table.countRoundFlags(this.x, this.y) == this.value && this.value != 0 ))
                     this.showPopUp()
                 
@@ -138,14 +138,13 @@ class Tile {
                     Table.endGame(true);
                 }
             } else if (!this.flagAssigned) {
-                console.log(this.flagAssigned)
                 this.elem.classList.add("reveal");
             }
 
             if (this.value == 0) {
                 Table.revealRound(this.x, this.y);
             }
-            if (this.value == -2) {
+            if (this.value == -2 && !Table.gameEnds) {
                 Table.revealBombs(this);
                 Table.endGame(false);
             }
@@ -169,7 +168,6 @@ class Tile {
             Table.nFlags++;
         }
         Table.nFlagsElem.innerHTML = Table.nFlags;
-        console.log(Table.nBombs)
     }
 
     showPopUp() {
@@ -182,9 +180,6 @@ class Tile {
     
 }
 
-
-// Gerar Table.grid vazia (value = undefined)
-
 const Table =  {
     nBombs: 35,
     nFlags: 35,
@@ -193,7 +188,7 @@ const Table =  {
     gridSizeX: 18,
     gridSizeY: 11,
     elem: document.querySelector("#table-container"),
-    modalElem: document.querySelector("#modal"),
+    modalElem: document.querySelector("#modal-container"),
     nFlagsElem: document.querySelector("#flag-value"),
     scoreElem: document.querySelector("#score-value"),
     grid:[],
@@ -201,7 +196,15 @@ const Table =  {
     flags: [],
     gameEnds: false,
 
+    restartGame() {
+        Table.gameEnds = false;
+        Table.nFlags = Table.nBombs;
+        Table.hideModal();
+        Table.createTable();
+    },
+    
     clockStart() {
+        Table.score = 0;
         Table.clockId = setInterval( () => {
             if (Table.score < 999) {
                 Table.score++;
@@ -253,6 +256,7 @@ const Table =  {
     },
 
     setBombs(clickedX, clickedY) {
+        Table.bombs = [];
         let settedBombs = 0;
         for (settedBombs; settedBombs < Table.nBombs; settedBombs++) {
             let pos;
@@ -265,7 +269,8 @@ const Table =  {
     },
 
     revealBombs(bomb) {
-        for (let i = 0, j = 0; i < Table.bombs.length; i++) {
+        let j = 0;
+        for (let i = 0; i < Table.nBombs; i++) {
             if (Table.bombs[i] != bomb) {
                 setTimeout( () => {
                     Table.bombs[i].reveal();
@@ -273,6 +278,10 @@ const Table =  {
                 j++;
             }
         }
+
+        setTimeout( () => {
+            Table.showModal();
+        }, j*200);
     },
 
     setIndicators() {
@@ -425,17 +434,33 @@ const Table =  {
         Table.modalElem.style.opacity = 1;
     },
 
+    hideModal() {
+        Table.modalElem.style.transition = "0s"
+        Table.modalElem.style.visibility = "";
+        Table.modalElem.style.opacity = 0;
+        setTimeout( () => {
+            Table.modalElem.style.transition = ""
+        }, 500 );
+    },
+
     endGame(win) {
         if (!Table.gameEnds) {
             Table.gameEnds = true;
             Table.clockStop();
-            Table.showModal();
-            // if (win) {
+            if (win) {
+                Table.showModal();
+                if (Storage.get("bestScore") == null || Table.score < Storage.get("bestScore")) {
+                    Storage.set("bestScore", Table.score);
+                }
+                document.querySelector("#modal #score-value").innerHTML = Table.score;
+                
+            } else {
+                Table.scoreElem.innerHTML = "--";
+                document.querySelector("#modal #score-value").innerHTML = "--";
+            }
+            
+            document.querySelector("#record-value").innerHTML = Storage.get("bestScore") | "--"
 
-            // } else {
-            //     Table.score = 0;
-            //     Table.scoreElem.innerHTML = "--";
-            // }
         }
     }
 
