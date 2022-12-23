@@ -4,6 +4,8 @@ class Tile {
     elem;
     valueElem;
     popupElem;
+    showelBtn;
+    flagBtn;
     flagElem;
     value = undefined;
     revealed = false;
@@ -23,7 +25,7 @@ class Tile {
                 this.reveal();
             } else {
                 Table.hidePopUps();
-                if (!this.revealed)
+                if (!this.revealed || (Table.countRoundFlags(this.x, this.y) == this.value && this.value != 0 ))
                     this.showPopUp()
                 
             }
@@ -64,6 +66,7 @@ class Tile {
                 this.revealed = true;
                 Table.hidePopUps();
             });
+            this.showelBtn = showelContainer;
             container1.appendChild( showelContainer );
 
             const flagContainer = document.createElement("div");
@@ -75,6 +78,7 @@ class Tile {
                 this.switchFlag();
                 Table.hidePopUps();
             });
+            this.flagBtn = flagContainer;
             container1.appendChild( flagContainer );
         }
         this.popupElem.appendChild(container1);
@@ -119,9 +123,10 @@ class Tile {
         this.valueElem.style.color = color;
     }
 
-    reveal() {
+    reveal(chainReveal) {
         if (!this.revealed) {
             this.revealed = true;
+            this.flagBtn.style.visibility = "hidden";
 
             if (this.value != -2) {
                 if (this.flagAssigned) {
@@ -129,18 +134,24 @@ class Tile {
                     this.flagElem.src = "./icons/wrong-flag.png";
                 }
                 this.elem.classList.add("reveal");
+                if (Table.winVerify()) {
+                    Table.endGame(true);
+                }
             } else if (!this.flagAssigned) {
                 console.log(this.flagAssigned)
                 this.elem.classList.add("reveal");
             }
-            // this.elem.querySelector(".content").style.visibility = "visible";
-            // this.elem.querySelector(".flag").style.visibility = "";
 
             if (this.value == 0) {
                 Table.revealRound(this.x, this.y);
             }
             if (this.value == -2) {
                 Table.revealBombs(this);
+                Table.endGame(false);
+            }
+        } else if (!chainReveal) {
+            if ( Table.countRoundFlags(this.x, this.y) == this.value ) {
+                Table.revealRound(this.x, this.y);
             }
         }
     }
@@ -149,10 +160,12 @@ class Tile {
         if (!this.flagAssigned) {
             this.flagAssigned = true;
             this.flagElem.style.visibility = "visible";
+            this.showelBtn.style.visibility = "hidden";
             Table.nFlags--;
         } else {
             this.flagAssigned = false;
             this.flagElem.style.visibility = "hidden";
+            this.showelBtn.style.visibility = "";
             Table.nFlags++;
         }
         Table.nFlagsElem.innerHTML = Table.nFlags;
@@ -180,16 +193,20 @@ const Table =  {
     gridSizeX: 18,
     gridSizeY: 11,
     elem: document.querySelector("#table-container"),
+    modalElem: document.querySelector("#modal"),
     nFlagsElem: document.querySelector("#flag-value"),
     scoreElem: document.querySelector("#score-value"),
     grid:[],
     bombs:[],
     flags: [],
+    gameEnds: false,
 
     clockStart() {
         Table.clockId = setInterval( () => {
-            Table.score++;
-            Table.scoreElem.innerHTML = Table.score;
+            if (Table.score < 999) {
+                Table.score++;
+                Table.scoreElem.innerHTML = Table.score;
+            }
         }, 1000 );
     },
 
@@ -248,9 +265,6 @@ const Table =  {
     },
 
     revealBombs(bomb) {
-        Table.clockStop();
-        Table.score = 0;
-        Table.scoreElem.innerHTML = "--";
         for (let i = 0, j = 0; i < Table.bombs.length; i++) {
             if (Table.bombs[i] != bomb) {
                 setTimeout( () => {
@@ -310,38 +324,78 @@ const Table =  {
     revealRound(col, row) {
         
         if (col-1 >= 0) {
-            Table.grid[row][col-1] != undefined ? Table.grid[row][col-1].reveal() : "";
+            Table.grid[row][col-1] != undefined && !Table.grid[row][col-1].flagAssigned ? Table.grid[row][col-1].reveal(true) : "";
 
             if (row-1 >= 0) {
-                Table.grid[row-1][col-1] != undefined ? Table.grid[row-1][col-1].reveal() : "";
+                Table.grid[row-1][col-1] != undefined && !Table.grid[row-1][col-1].flagAssigned ? Table.grid[row-1][col-1].reveal(true) : "";
             }
             
             if (row+1 < Table.gridSizeY) {
-                Table.grid[row+1][col-1] != undefined ? Table.grid[row+1][col-1].reveal() : "";
+                Table.grid[row+1][col-1] != undefined && !Table.grid[row+1][col-1].flagAssigned ? Table.grid[row+1][col-1].reveal(true) : "";
             }
             
         }
         
         if (col+1 < Table.gridSizeX) {
-            Table.grid[row][col+1] != undefined ? Table.grid[row][col+1].reveal() : "";
+            Table.grid[row][col+1] != undefined && !Table.grid[row][col+1].flagAssigned ? Table.grid[row][col+1].reveal(true) : "";
 
             if (row-1 >= 0) {
-                Table.grid[row-1][col+1] != undefined ? Table.grid[row-1][col+1].reveal() : "";
+                Table.grid[row-1][col+1] != undefined && !Table.grid[row-1][col+1].flagAssigned ? Table.grid[row-1][col+1].reveal(true) : "";
             }
             
             if (row+1 < Table.gridSizeY) {
-                Table.grid[row+1][col+1] != undefined ? Table.grid[row+1][col+1].reveal() : "";
+                Table.grid[row+1][col+1] != undefined && !Table.grid[row+1][col+1].flagAssigned ? Table.grid[row+1][col+1].reveal(true) : "";
             }
 
         }
         
         if (row-1 >= 0) {
-            Table.grid[row-1][col] != undefined ? Table.grid[row-1][col].reveal() : "";
+            Table.grid[row-1][col] != undefined && !Table.grid[row-1][col].flagAssigned ? Table.grid[row-1][col].reveal(true) : "";
         }
         
         if (row+1 < Table.gridSizeY) {
-            Table.grid[row+1][col] != undefined ? Table.grid[row+1][col].reveal() : "";
+            Table.grid[row+1][col] != undefined && !Table.grid[row+1][col].flagAssigned ? Table.grid[row+1][col].reveal(true) : "";
         }
+    },
+
+    countRoundFlags(col, row) {
+
+        let nFlags = 0;
+
+        if (col-1 >= 0) {
+            Table.grid[row][col-1] != undefined && Table.grid[row][col-1].flagAssigned ? nFlags++ : "";
+
+            if (row-1 >= 0) {
+                Table.grid[row-1][col-1] != undefined && Table.grid[row-1][col-1].flagAssigned ? nFlags++ : "";
+            }
+            
+            if (row+1 < Table.gridSizeY) {
+                Table.grid[row+1][col-1] != undefined && Table.grid[row+1][col-1].flagAssigned ? nFlags++ : "";
+            }
+        }
+        
+        if (col+1 < Table.gridSizeX) {
+            Table.grid[row][col+1] != undefined && Table.grid[row][col+1].flagAssigned ? nFlags++ : "";
+
+            if (row-1 >= 0) {
+                Table.grid[row-1][col+1] != undefined && Table.grid[row-1][col+1].flagAssigned ? nFlags++ : "";
+            }
+            
+            if (row+1 < Table.gridSizeY) {
+                Table.grid[row+1][col+1] != undefined && Table.grid[row+1][col+1].flagAssigned ? nFlags++ : "";
+            }
+
+        }
+        
+        if (row-1 >= 0) {
+            Table.grid[row-1][col] != undefined && Table.grid[row-1][col].flagAssigned ? nFlags++ : "";
+        }
+        
+        if (row+1 < Table.gridSizeY) {
+            Table.grid[row+1][col] != undefined && Table.grid[row+1][col].flagAssigned ? nFlags++ : "";
+        }
+
+        return nFlags;
     },
 
     hidePopUps() {
@@ -350,12 +404,51 @@ const Table =  {
                 Table.grid[row][col].hidePopUp();
             }
         }
+    },
+    
+    winVerify() {
+        let nRevealed = 0;
+        for (let col = 0; col < Table.gridSizeX; col++) {
+            for (let row = 0; row < Table.gridSizeY; row++) {
+                if (Table.grid[row][col].revealed)
+                    nRevealed++;
+            }
+        }
+        if (nRevealed == Table.gridSizeX * Table.gridSizeY - Table.nBombs) {
+            return true;
+        }
+        return false;
+    },
+
+    showModal() {
+        Table.modalElem.style.visibility = "visible";
+        Table.modalElem.style.opacity = 1;
+    },
+
+    endGame(win) {
+        if (!Table.gameEnds) {
+            Table.gameEnds = true;
+            Table.clockStop();
+            Table.showModal();
+            // if (win) {
+
+            // } else {
+            //     Table.score = 0;
+            //     Table.scoreElem.innerHTML = "--";
+            // }
+        }
     }
 
 }
 
+let Storage = {
+    get(key) {
+        return JSON.parse( window.localStorage.getItem(key) );
+    },
+
+    set(key, value) {
+        window.localStorage.setItem(key, JSON.stringify(value) );
+    } 
+}
+
 Table.createTable();
-
-// Refatorar código para utilizar o objeto (Tile) ao invés do HTML
-// Criar os métodos no próprio Tile
-
